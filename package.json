@@ -1,0 +1,17 @@
+{
+  "name": "serverstatus",
+  "version": "1.0.0",
+  "description": "displays the status of several game servers",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "gamedig": "^3.0.0",
+    "serve-favicon": "^2.5.0"
+  }
+}
