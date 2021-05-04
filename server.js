@@ -2,6 +2,7 @@ var express = require("express");
 var gamedig = require("gamedig");
 var favicon = require("serve-favicon");
 var fs = require("fs");
+var https = require("https");
 
 var app = express();
 
@@ -51,3 +52,10 @@ app.get("/", function(req, res) {
 
 
 app.listen(config.port);
+
+if (config.ssl) {
+	https.createServer({
+		key: fs.readFileSync(config.ssl.key, "utf8"),
+		cert: fs.readFileSync(config.ssl.certificate, "utf8")
+	}, app).listen(config.ssl.port);
+}
