@@ -111,14 +111,16 @@ function setServerStatus(server) {
 	element.outerHTML = html;
 }
 
-fetch("http://localhost/servers")
+const baseUrl = window.location.protocol + "//" + window.location.host;
+
+fetch(`${baseUrl}/servers`)
 	.then(fetchStatus)
 	.then(fetchJson)
 	.then(servers => {
 		console.log("found servers: ", servers.map(s => s.name));
 		servers.forEach(createServerElement);
 		servers.forEach(server => {
-			fetch("http://localhost/server/" + server.name)
+			fetch(`${baseUrl}/server/${server.name}`)
 				.then(fetchStatus)
 				.then(fetchJson)
 				.then(setServerStatus);
