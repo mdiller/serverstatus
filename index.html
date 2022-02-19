@@ -4,7 +4,7 @@
 <meta content="utf-8" http-equiv="encoding">
 
 <head>
-	<title>TITLEGOESHERE</title>
+	<title>skrattpotatis</title>
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
 </head>
 <style>
@@ -67,9 +67,63 @@ td:last-child {
 
 <body>
 	<div id="title">
-		TITLEGOESHERE
+		skrattpotatis
 	</div>
 	<div id="statuspanel">
-		DATAGOESHERE
+		<table id="maintable">
+
+		</table>
 	</div>
 </body>
+
+<script>
+
+function fetchStatus(response) {
+	if (response.status >= 200 && response.status < 300) {
+		return Promise.resolve(response)
+	} else {
+		return Promise.reject(new Error(response.statusText))
+	}
+}
+
+function fetchJson(response) {
+	return response.json()
+}
+
+const maintable = document.getElementById("maintable");
+
+function createServerElement(server) {
+	var row = document.createElement("tr");
+	var html = `<td><img src="${server.icon}" width="24" height="24"></td>`
+	html += `<td>${server.name}</td>`
+	html += `<td id="${server.name}_value">...</td>`
+	row.innerHTML = html;
+	maintable.appendChild(row);
+}
+
+function setServerStatus(server) {
+	var html = `<td style="color: red">Offline</td>`;
+	if (server.status) {
+		var maxplayers = server.maxplayers ? server.maxplayers : server.status.maxplayers;
+		html = `<td style="color: green">${server.status.players.length} / ${maxplayers}</td>`;
+	}
+	var element = document.getElementById(`${server.name}_value`);
+	element.outerHTML = html;
+}
+
+fetch("http://localhost/servers")
+	.then(fetchStatus)
+	.then(fetchJson)
+	.then(servers => {
+		console.log("found servers: ", servers.map(s => s.name));
+		servers.forEach(createServerElement);
+		servers.forEach(server => {
+			fetch("http://localhost/server/" + server.name)
+				.then(fetchStatus)
+				.then(fetchJson)
+				.then(setServerStatus);
+		})
+	}).catch(function (error) {
+		console.err("Request failed", error);
+	});
+</script>

@@ -3,6 +3,7 @@ var gamedig = require("gamedig");
 var favicon = require("serve-favicon");
 var fs = require("fs");
 var https = require("https");
+var path = require("path");
 
 var app = express();
 
@@ -11,43 +12,35 @@ var config = JSON.parse(fs.readFileSync("./config.json"));
 app.use("/images", express.static("images"));
 app.use(favicon("./favicon.ico"));
 
-function StatusToHtml(statuses) {
-	var html = "<table>";
-	statuses.forEach(server => {
-		html += "<tr>";
-		html += `<td><img src="${server.icon}" width="24" height="24"></td>`;
-		html += `<td>${server.name}</td>`;
-		if (server.status) {
-			var maxplayers = server.maxplayers ? server.maxplayers : server.status.maxplayers;
-			html += `<td style="color: green">${server.status.players.length} / ${maxplayers}</td>`;
-		}
-		else {
-			html += `<td style="color: red">Offline</td>`;
-		}
-		html += "</tr>";
-	})
-
-	html += "</table>";
-	return html;
-}
 
 app.get("/", function(req, res) {
-	var html = fs.readFileSync("./index.html", { encoding: "utf8", flag: "r" });
+	res.sendFile(path.join(__dirname + "/index.html"));
+});
 
-	var promises = config.servers.map(server => gamedig.query(server).then(data => {
+// Gets a list of servers
+app.get("/servers", function (req, res) {
+	res.setHeader('Content-Type', 'application/json');
+	res.end(JSON.stringify(config.servers));
+});
+
+// Gets info for one server
+app.get("/server/:servername", function (req, res) {
+	var name = req.params.servername
+	if (!config.servers.some(server => server.name == name)) {
+		res.statusCode = 404;
+		res.send("server by that name not found!")
+		return;
+	}
+	var server = config.servers.find(s => s.name == name);
+	gamedig.query(server).then(data => {
 		server["status"] = data;
-		return server;
+		res.setHeader('Content-Type', 'application/json');
+		res.end(JSON.stringify(server));
 	}).catch(e => {
 		server["status"] = null;
-		return server;
-	}));
-
-	Promise.all(promises).then(function (data) {
-		html = html.replace("DATAGOESHERE", StatusToHtml(data))
-		html = html.replaceAll("TITLEGOESHERE", config.title)
-		res.send(html);
+		res.setHeader('Content-Type', 'application/json');
+		res.end(JSON.stringify(server));
 	});
-	// res.sendFile(path.join(__dirname + "/index.html"));
 });
 
 
